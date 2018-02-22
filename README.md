@@ -36,6 +36,15 @@ Do not delete pre-existing keys in the `~/.ssh/authorized_keys` file if present!
 ```
 docker stack deploy -c /vagrant/voltha-stack-3-masters.yml voltha
 ```
+Do not delete pre-existing keys in the `~/.ssh/authorized_keys` file if present.
+5. `ansible-playbook` to install the Docker Swarm cluster. Please execute the command from voltha1 VM.
+```
+    ansible-playbook -i /data/inventory.ini /vagrant/swarm-playbook.yml
+```
+6. `docker stack deploy` voltha
+```
+docker stack deploy -c /vagrant/voltha-stack-3-masters.yml voltha
+```
 7. Please note that ONOS is not deployed as part of this cluster. You have to to install it yourself and install
 the necessary apps and push the necessary config
 
