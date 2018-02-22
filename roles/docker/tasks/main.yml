@@ -36,11 +36,11 @@
       - software-properties-common
       - docker-ce
 
-- name: Ensure User in Docker Group
-  become: yes
-  user:
-      name: ubuntu
-      append: yes
-      groups:
-          - docker
-      state: present
+#- name: Ensure User in Docker Group
+#  become: yes
+#  user:
+#      name: vagrant
+#      append: yes
+#      groups:
+#          - docker
+#      state: present

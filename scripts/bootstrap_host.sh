@@ -18,12 +18,12 @@
 set -e
 
 echo "Bootstrapping ..."
-echo "ubuntu:ubuntu" | sudo chpasswd
+echo "vagrant:vagrant" | sudo chpasswd
 apt-get update -y
 apt-get install -y software-properties-common python jq
 
 mkdir -p .ssh
-set | grep ubuntu
+set | grep vagrant
 cat <<END_CONFIG > .ssh/config
 Host *
    StrictHostKeyChecking no

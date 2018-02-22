@@ -33,7 +33,7 @@
 #               to `/var/local`.
 # DOCKER_HOST_IP -
 # ZK_TAG      - The tag that should be used when referencing the ZooKeeper
-#               docker image. Defaults to `3.4.11`.
+#               docker image. Defaults to `latest`.
 # KAFKA_TAG   - The tag that should be used when referencing the Kafka
 #               docker image. Default to `1.0.0`.
 # CONSUL_TAG  - The tag that should be used when referencing the Consul
@@ -44,7 +44,7 @@ version: "3"
 
 services:
   zk1:
-    image: "${REGISTRY}zookeeper:${ZK_TAG:-3.4.11}"
+    image: "${REGISTRY}zookeeper:${ZK_TAG:-latest}"
     logging:
       driver: "json-file"
       options:
@@ -57,7 +57,7 @@ services:
       ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zk2:2888:3888 server.3=zk3:2888:3888
 
   zk2:
-    image: "${REGISTRY}zookeeper:${ZK_TAG:-3.4.11}"
+    image: "${REGISTRY}zookeeper:${ZK_TAG:-latest}"
     logging:
       driver: "json-file"
       options:
@@ -70,7 +70,7 @@ services:
       ZOO_SERVERS: server.1=zk1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zk3:2888:3888
 
   zk3:
-    image: "${REGISTRY}zookeeper:${ZK_TAG:-3.4.11}"
+    image: "${REGISTRY}zookeeper:${ZK_TAG:-latest}"
     logging:
       driver: "json-file"
       options:
@@ -85,7 +85,7 @@ services:
   kafka:
     deploy:
       mode: global
-    image: "${REGISTRY}wurstmeister/kafka:${KAFKA_TAG:-1.0.0}"
+    image: "${REGISTRY}wurstmeister/kafka:${KAFKA_TAG:-latest}"
     logging:
       driver: "json-file"
       options:
@@ -112,18 +112,25 @@ services:
         max-file: 3
 
     # Deploy to all docker manager nodes
+#    deploy:
+#      mode: global
+#      placement:
+#        constraints:
+#          - node.role == manager
+#      restart_policy:
+#        condition: on-failure
     deploy:
-      mode: global
+      replicas: 1
       placement:
         constraints:
-          - node.role == manager
+          - node.id == vtptcgovcnwt3ymh54zrft1v5
       restart_policy:
         condition: on-failure
     entrypoint:
       - consul
       - agent
       - -server
-      - -bootstrap-expect=3
+      - -bootstrap-expect=1
       - -config-dir=/consul/config
       - -data-dir=/consul/data              # mandatory property
       - -client=0.0.0.0
@@ -145,12 +152,12 @@ services:
       - "8400:8400"
       - "8500:8500"
       - "8600:8600/udp"
-    volumes:
-      - ${CONSUL_ROOT:-/var/local}:/consul/data
-      - ${CONSUL_ROOT:-/var/local}:/consul/config
+#    volumes:
+#      - ${CONSUL_ROOT:-/var/local}:/consul/data
+#      - ${CONSUL_ROOT:-/var/local}:/consul/config
 
   fluentdactv:
-    image: "${REGISTRY}opencord/voltha-fluentd:${TAG:-latest}"
+    image: "${REGISTRY}voltha/voltha-fluentd:${TAG:-latest}"
     logging:
       driver: "json-file"
       options:
@@ -170,7 +177,7 @@ services:
       - "${VOLTHA_LOGS:-/var/log}:/fluentd/log"
 
   fluentdstby:
-    image: "${REGISTRY}opencord/voltha-fluentd:${TAG:-latest}"
+    image: "${REGISTRY}voltha/voltha-fluentd:${TAG:-latest}"
     logging:
       driver: "json-file"
       options:
@@ -192,7 +199,7 @@ services:
   # The Fluentd container is part of the data collection
   # infrastructure.
   fluentd:
-    image: "${REGISTRY}opencord/voltha-fluentd:${TAG:-latest}"
+    image: "${REGISTRY}voltha/voltha-fluentd:${TAG:-latest}"
     logging:
       driver: "json-file"
       options:
@@ -245,55 +252,55 @@ services:
   # meta data via HTTP so that ONOS instances can form an HA cluster.
   # The cluster manager must run on a manager node so that it can 
   # retrieve service information from manager nodes
-  onos_cluster_manager:
-    image: "${REGISTRY}opencord/voltha-unum:${TAG:-latest}"
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-    environment:
-      PERIOD: "10s"
-      LOG_LEVEL: "debug"
-      ORCHESTRATION: "swarm://"
-      LABELS: "org.voltha.onos.cluster:true"
-      NETWORK: "org.voltha.onos.cluster:true"
-    ports:
-      - 5411:5411
-    networks:
-      - voltha-net
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-  # ONOS is the SDN controller for the solution and handles AAA,
-  # IGMP proxy, and L2 DHCP requests as well as manages flows
-  # down to the virtual devices (MCAST + OLT flows).
-  # Currently there is a single instance of ONOS as some of the
-  # applications running under ONOS do not support HA.
-  onos:
-    deploy:
-      replicas: 1
-      labels:
-        org.voltha.onos.cluster: "true"
-    image: "${REGISTRY}opencord/voltha-onos:${TAG:-latest}"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: 3
-    ports:
-      - 8101:8101 # ssh
-      - 6653:6653 # OF
-      - 8181:8181 # UI
-    environment:
-      EXTRA_JAVA_OPTS: "-Donos.cluster.metadata.uri=http://onos_cluster_manager:5411/config/"
-    networks:
-      - voltha-net
+#  onos_cluster_manager:
+#    image: "${REGISTRY}voltha/voltha-unum:${TAG:-latest}"
+#    deploy:
+#      replicas: 1
+#      placement:
+#        constraints:
+#          - node.role == manager
+#    environment:
+#      PERIOD: "10s"
+#      LOG_LEVEL: "debug"
+#      ORCHESTRATION: "swarm://"
+#      LABELS: "org.voltha.onos.cluster:true"
+#      NETWORK: "org.voltha.onos.cluster:true"
+#    ports:
+#      - 5411:5411
+#    networks:
+#      - voltha-net
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#
+#  # ONOS is the SDN controller for the solution and handles AAA,
+#  # IGMP proxy, and L2 DHCP requests as well as manages flows
+#  # down to the virtual devices (MCAST + OLT flows).
+#  # Currently there is a single instance of ONOS as some of the
+#  # applications running under ONOS do not support HA.
+#  onos:
+#    deploy:
+#      replicas: 1
+#      labels:
+#        org.voltha.onos.cluster: "true"
+#    image: "${REGISTRY}voltha/voltha-onos:${TAG:-latest}"
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "10m"
+#        max-file: 3
+#    ports:
+#      - 8101:8101 # ssh
+#      - 6653:6653 # OF
+#      - 8181:8181 # UI
+#    environment:
+#      EXTRA_JAVA_OPTS: "-Donos.cluster.metadata.uri=http://onos_cluster_manager:5411/config/"
+#    networks:
+#      - voltha-net
 
   # The VCORE container is the core capabilities of VOLTHA including
   # interacting with device adapters
   vcore:
-    image: "${REGISTRY}opencord/voltha:${TAG:-latest}"
+    image: "voltha-voltha:latest"
     logging:
       driver: "json-file"
       options:
@@ -325,20 +332,20 @@ services:
   # The OpenFlow Agent support the OpenFlow protocol communication
   # between ONOS and VOLTHA.
   ofagent:
-    image: "${REGISTRY}opencord/voltha-ofagent:${TAG:-latest}"
+    image: "${REGISTRY}voltha/voltha-ofagent:${TAG:-latest}"
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: 3
     deploy:
-      replicas: 1
+      replicas: 3
     entrypoint:
       - /ofagent/ofagent/main.py
       - -v
       - --consul=consul:8500
       - --fluentd=fluentd:24224
-      - --controller=onos:6653
+      - --controller=172.42.43.101:6653
       - --grpc-endpoint=vcore:50556
       - --instance-id-is-container-name
     volumes:
@@ -350,7 +357,7 @@ services:
   # the VOLTHA components as well as surfaces a REST API and maps
   # the requests to GPRC
   voltha:
-    image: "${REGISTRY}opencord/voltha-envoy:${TAG:-latest}"
+    image: "${REGISTRY}voltha/voltha-envoy:${TAG:-latest}"
     logging:
       driver: "json-file"
       options:
@@ -379,7 +386,7 @@ services:
   # The CLI container provides an CLI to the VOLTHA capabilitiy 
   # that can be accessed via SSH.
   cli:
-    image: "${REGISTRY}opencord/voltha-cli:${TAG:-latest}"
+    image: "${REGISTRY}voltha/voltha-cli:${TAG:-latest}"
     logging:
       driver: "json-file"
       options:
@@ -403,7 +410,7 @@ services:
   # The Netconf container provides an NETCONF API to be used
   # with VOLTHA and maps that to GRPC requests
   netconf:
-    image: "${REGISTRY}opencord/voltha-netconf:${TAG:-latest}"
+    image: "${REGISTRY}voltha/voltha-netconf:${TAG:-latest}"
     logging:
       driver: "json-file"
       options:
@@ -432,7 +439,7 @@ services:
   # as other VOLTHA containers and is thus a convenient 
   # troubleshooting tool
   tools:
-    image: "${REGISTRY}opencord/voltha-tools:${TAG:-latest}"
+    image: "${REGISTRY}voltha/voltha-tools:${TAG:-latest}"
     logging:
       driver: "json-file"
       options:
