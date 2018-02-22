@@ -26,7 +26,7 @@ mkdir ~/.ssh
 ssh-keygen
 ```
 Now copy the contents of `~/.ssh/id_rsa.pub` to file `~/.ssh/authorized_keys` of the all the VMS including itself.
-Do not delete pre-existing keys in the `~/.ssh/authorized_keys` file if present.
+Do not delete pre-existing keys in the `~/.ssh/authorized_keys` file if present!!
 
 5. `ansible-playbook` to install the Docker Swarm cluster. Please execute the command from voltha1 VM.
 ```
