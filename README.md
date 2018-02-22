@@ -7,27 +7,36 @@ use, a rather large, off-line mode installer.
 ## Five Easy Steps (Four of which are to deploy Docker Swarm)
 1. `git clone` this repository
 ```
-git clone http://github.com/ciena/voltha-playground
+https://github.com/gcgirish-radisys/voltha-playground.git
 ```
 2. `vagrant up` the VMs
 ```
 cd voltha-playround
 vagrant up
 ```
-3. `get.docker.io` to bootstrap node
+3. Install the following packages by SSH-ing to each of the vagrant VMS (`vagrant ssh 'vm_name'`)
 ```
-vagrant ssh voltha1
+sudo apt-get update -y && sudo apt-get install build-essential virtualenv python-dev libpcap-dev sshpass ansible
 curl -sSL get.docker.io | sudo CHANNEL=stable bash
+sudo usermod -aG docker $USER
 ```
-4. `ansible-playbook` to install the Docker Swarm cluster
+4. Create public/private SSH Keys using the below command in each of the VM.
 ```
-sudo docker run -v /vagrant:/data -ti opencord/voltha-ansible \
-    -i /data/inventory.ini /data/swarm-playbook.yml
+mkdir ~/.ssh
+ssh-keygen
 ```
-5. `docker stack deploy` voltha
+Now copy the contents of `~/.ssh/id_rsa.pub` to file `~/.ssh/authorized_keys` of the all the VMS including itself.
+Do not delete pre-existing keys in the `~/.ssh/authorized_keys` file if present.
+5. `ansible-playbook` to install the Docker Swarm cluster. Please execute the command from voltha1 VM.
 ```
-sudo docker stack deploy -c /vagrant/voltha-stack-3-masters.yml voltha
+    ansible-playbook -i /data/inventory.ini /vagrant/swarm-playbook.yml
 ```
+6. `docker stack deploy` voltha
+```
+docker stack deploy -c /vagrant/voltha-stack-3-masters.yml voltha
+```
+7. Please note that ONOS is not deployed as part of this cluster. You have to to install it yourself and install
+the necessary apps and push the necessary config
 
 ## Verification
 
